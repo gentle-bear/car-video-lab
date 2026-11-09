@@ -29,3 +29,7 @@ To update the existing GitHub repository without losing commit history, clone it
 Use PowerShell commands in `WINDOWS-CLEAN-UPLOAD.md`.
 
 **Limitations:** This is an experimental CarPlay scene; a sideloaded IPA still does not have Apple’s CarPlay Video entitlement. YouTube plays on iPhone; native CarPlay HLS demo requires Apple permission and a compatible car. The CarPlay code has not been compiled with Xcode in this environment; check GitHub Actions for build errors.
+
+
+## v0.4.2 build fix
+Removed AVRoutePickerView.player assignment (unavailable on iOS 27.1). AirPlayPicker uses system route selection; AVPlayer playback remains in NativeHLSPlayback. The full Xcode build still requires GitHub Actions verification.

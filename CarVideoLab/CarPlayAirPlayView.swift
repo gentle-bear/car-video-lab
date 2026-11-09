@@ -9,7 +9,6 @@ struct AirPlayPicker: UIViewRepresentable {
         picker.prioritizesVideoDevices = true
         picker.tintColor = .white
         picker.activeTintColor = .systemPink
-        picker.player = NativeHLSPlayback.shared.player
         return picker
     }
     func updateUIView(_ uiView: AVRoutePickerView, context: Context) { }
