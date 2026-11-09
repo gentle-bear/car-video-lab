@@ -1,0 +1,75 @@
+name: Build iPhone IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Parse Swift source files
+        run: |
+          swiftc -frontend -parse CarVideoLab/*.swift CarVideoLabShare/*.swift
+
+      - name: Test YouTube URL parser and share links
+        run: |
+          swiftc CarVideoLab/VideoURLParser.swift Tests/ParserSmoke.swift \
+            -o "$RUNNER_TEMP/parser-smoke"
+          "$RUNNER_TEMP/parser-smoke"
+
+      - name: Compile app and Share Extension for iPhone (without signing)
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project CarVideoLab.xcodeproj \
+            -scheme CarVideoLab \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/CarVideoLabDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' \
+            build 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+
+      - name: Package unsigned IPA for Sideloadly
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/CarVideoLabDerivedData/Build/Products/Release-iphoneos/CarVideoLab.app"
+          test -d "$APP"
+          test -d "$APP/PlugIns/CarVideoLabShare.appex"
+          mkdir -p "$RUNNER_TEMP/CarVideoLabPackage/Payload"
+          ditto "$APP" "$RUNNER_TEMP/CarVideoLabPackage/Payload/CarVideoLab.app"
+          cd "$RUNNER_TEMP/CarVideoLabPackage"
+          /usr/bin/zip -q -r "$GITHUB_WORKSPACE/CarVideoLab-unsigned.ipa" Payload
+          /usr/bin/unzip -tq "$GITHUB_WORKSPACE/CarVideoLab-unsigned.ipa"
+          ls -lh "$GITHUB_WORKSPACE/CarVideoLab-unsigned.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: CarVideoLab-v0.4.1-unsigned-IPA
+          path: CarVideoLab-unsigned.ipa
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload compiler log if build fails
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: CarVideoLab-build-log
+          path: build.log
+          retention-days: 7
+          if-no-files-found: warn

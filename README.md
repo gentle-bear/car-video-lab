@@ -8,6 +8,16 @@ See [CARPLAY-SETUP.md](CARPLAY-SETUP.md) for the full integration and activation
 
 GitHub Actions uses Xcode 27. To update your existing repository from Windows, see below.
 
+```powershell
+cd D:\Downloads
+git clone https://github.com/gentle-bear/car-video-lab.git car-video-lab-update
+# Copy the unzipped project contents to car-video-lab-update (including .github)
+cd car-video-lab-update
+git add -A
+git commit -m "Car Video Lab v0.4 - CarPlay experiment"
+git push
+```
+
 You can also update an existing local clone, copying files into its root. Don't run `git init` on the unpacked archive when you already have a repository.
 
 ## Complete ZIP for Windows
